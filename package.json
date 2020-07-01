@@ -1,8 +1,18 @@
 {
   "name": "foier",
   "version": "1.0.0",
-  "main": "index.js",
+  "main": "lib/app.ts",
   "repository": "git@github.com:geofflittle/foier.git",
   "author": "Geoff Little <g.little712@gmail.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc",
+    "cdk:deploy": "cdk deploy"
+  },
+  "devDependencies": {
+    "@aws-cdk/core": "^1.48.0",
+    "@types/node": "^14.0.14",
+    "ts-node": "^8.10.2",
+    "typescript": "^3.9.6"
+  }
 }
