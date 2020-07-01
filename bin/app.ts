@@ -3,5 +3,5 @@
 import { App } from "@aws-cdk/core"
 import { FoierStack } from "../lib/foier-stack"
 
-const app = new App();
+const app = new App()
 new FoierStack(app, "Foier")

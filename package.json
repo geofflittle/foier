@@ -1,18 +1,26 @@
 {
-  "name": "foier",
-  "version": "1.0.0",
-  "main": "lib/app.ts",
-  "repository": "git@github.com:geofflittle/foier.git",
-  "author": "Geoff Little <g.little712@gmail.com>",
-  "license": "MIT",
-  "scripts": {
-    "build": "tsc",
-    "cdk:deploy": "cdk deploy"
-  },
-  "devDependencies": {
-    "@aws-cdk/core": "^1.48.0",
-    "@types/node": "^14.0.14",
-    "ts-node": "^8.10.2",
-    "typescript": "^3.9.6"
-  }
+    "name": "foier",
+    "version": "1.0.0",
+    "main": "lib/app.ts",
+    "repository": "git@github.com:geofflittle/foier.git",
+    "author": "Geoff Little <g.little712@gmail.com>",
+    "license": "MIT",
+    "scripts": {
+        "lint": "eslint --fix '**/*.{js,ts}'",
+        "format": "prettier --write '**/*.{md,js,json,ts}'",
+        "build": "tsc",
+        "cdk:deploy": "cdk deploy"
+    },
+    "devDependencies": {
+        "@aws-cdk/core": "^1.48.0",
+        "@types/node": "^14.0.14",
+        "@typescript-eslint/eslint-plugin": "^3.5.0",
+        "@typescript-eslint/parser": "^3.5.0",
+        "eslint": "^7.3.1",
+        "eslint-config-prettier": "^6.11.0",
+        "eslint-plugin-prettier": "^3.1.4",
+        "prettier": "^2.0.5",
+        "ts-node": "^8.10.2",
+        "typescript": "^3.9.6"
+    }
 }
