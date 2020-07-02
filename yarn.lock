@@ -29,6 +29,16 @@
     "@aws-cdk/cx-api" "1.48.0"
     constructs "^3.0.2"
 
+"@aws-cdk/aws-apigatewayv2@^1.48.0":
+  version "1.48.0"
+  resolved "https://registry.yarnpkg.com/@aws-cdk/aws-apigatewayv2/-/aws-apigatewayv2-1.48.0.tgz#957b9cae9b0fc63c17d4b3b2284b70a4e39b7430"
+  integrity sha512-XtD0TXGNHvJibT3xZijDWMA0h+1CRq0pqDKg/3QayZmZGA3OE5f8q9BTdU90fFs5QqVpjsn/eR6iFrcV4vJ6jA==
+  dependencies:
+    "@aws-cdk/aws-iam" "1.48.0"
+    "@aws-cdk/aws-lambda" "1.48.0"
+    "@aws-cdk/core" "1.48.0"
+    constructs "^3.0.2"
+
 "@aws-cdk/aws-certificatemanager@1.48.0":
   version "1.48.0"
   resolved "https://registry.yarnpkg.com/@aws-cdk/aws-certificatemanager/-/aws-certificatemanager-1.48.0.tgz#f02e2c0cdec810452d9ca38529d0e1bff60588ff"

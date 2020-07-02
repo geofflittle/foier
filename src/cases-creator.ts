@@ -43,11 +43,39 @@ import { APIGatewayProxyHandler } from "aws-lambda"
 //     }
 // }
 
-export const handler: APIGatewayProxyHandler = async () => {
-    const message = "Received create case request"
-    console.log({ message })
+export const handler: APIGatewayProxyHandler = async (event) => {
+    console.log({ event })
+    if (!event.body) {
+        return {
+            statusCode: 400,
+            body: "No body"
+        }
+    }
+    const bodyJson = JSON.parse(event.body)
+    console.log({ bodyJson })
+    const cases = bodyJson.cases.filter((kase: string) => kase.length >= 0)
+    console.log({ cases })
+    if (!cases || cases.length <= 0) {
+        return {
+            statusCode: 400,
+            body: "No cases"
+        }
+    }
+    const rand = Math.random()
+    if (rand < 0.3) {
+        return {
+            statusCode: 400,
+            body: JSON.stringify({ message: "Random 400" })
+        }
+    }
+    if (rand < 0.6) {
+        return {
+            statusCode: 500,
+            body: JSON.stringify({ message: "Random 500" })
+        }
+    }
     return {
         statusCode: 200,
-        body: message
+        body: "{}"
     }
 }
