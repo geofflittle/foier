@@ -6,15 +6,15 @@ Automates FOIA requests to Chicago's COPA (Civilian Office of Police Accountabil
 
 ## Commands
 
-| Command                                                          | Description                                                      |
-| ---------------------------------------------------------------- | ---------------------------------------------------------------- |
-| `yarn clean`                                                     | removes built artifacts                                          |
-| `yarn lint`                                                      | lints the codebase                                               |
-| `yarn format`                                                    | formats the codebase                                             |
-| `yarn backend:build`                                             | compiles the backend js                                          |
-| `yarn infra:deploy`                                              | deploys the Foier stack to the environment's default aws account |
-| `yarn deploy`                                                    | cleans, builds the backend, and deploys the infra                |
-| `awscurl --service execute-api -X <method> <apig-uri> -d <body>` | curl the apig endpoint with sigv4 auth                           |
+| Command                                                                                  | Description                                                      |
+| ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| <pre>yarn clean</pre>                                                                    | removes built artifacts                                          |
+| <pre>yarn lint</pre>                                                                     | lints the codebase                                               |
+| <pre>yarn format</pre>                                                                   | formats the codebase                                             |
+| <pre>yarn backend:build</pre>                                                            | compiles the backend js                                          |
+| <pre>yarn infra:deploy</pre>                                                             | deploys the Foier stack to the environment's default aws account |
+| <pre>yarn deploy</pre>                                                                   | cleans, builds the backend, and deploys the infra                |
+| <pre>awscurl --service execute-api \ <br/> -X [method][apig-uri] \ <br/> -d [body]</pre> | curl the apig endpoint with sigv4 auth                           |
 
 ## Dirs
 
