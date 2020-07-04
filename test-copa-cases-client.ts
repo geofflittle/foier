@@ -1,5 +1,6 @@
-import { getCopaCase, queryCopaCases } from "./src/daos/copa-cases-dao"
-;(async () => {
+import { getCopaCase, queryCopaCases } from "./src/clients/copa-cases-client"
+;
+(async () => {
     const copaCases = await queryCopaCases({
         limit: 2,
         orderBy: {

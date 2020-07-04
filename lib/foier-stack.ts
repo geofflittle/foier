@@ -1,5 +1,6 @@
 import path = require("path")
 
+import { AttributeType, Table } from "@aws-cdk/aws-dynamodb"
 import { AuthorizationType, JsonSchemaType, LambdaIntegration, RestApi } from "@aws-cdk/aws-apigateway"
 import { Code, Function, Runtime } from "@aws-cdk/aws-lambda"
 import { Construct, Stack } from "@aws-cdk/core"
@@ -8,12 +9,22 @@ export class FoierStack extends Stack {
     constructor(scope: Construct, id: string) {
         super(scope, id)
 
-        const createCasesHandler = new Function(this, "CreateCasesHandler", {
+        const ccfrTable = new Table(this, "CopaCaseFoiaRequests", {
+            partitionKey: {
+                name: "copaCaseId",
+                type: AttributeType.STRING
+            }
+        })
+
+        const copaCasesLoader = new Function(this, "CopaCasesLoader", {
             code: Code.fromAsset(path.join(process.cwd(), "dist")),
             runtime: Runtime.NODEJS_12_X,
-            handler: "cases-creator.handler",
-            environment: {}
+            handler: "handlers/copa-cases-loader.handler",
+            environment: {
+                CCFR_TABLE_NAME: ccfrTable.tableName
+            }
         })
+        ccfrTable.grantWriteData(copaCasesLoader)
 
         const api = new RestApi(this, "FoierApi")
 
@@ -50,7 +61,7 @@ export class FoierStack extends Stack {
         })
 
         const casesResource = api.root.addResource("cases")
-        casesResource.addMethod("POST", new LambdaIntegration(createCasesHandler), {
+        casesResource.addMethod("POST", new LambdaIntegration(copaCasesLoader), {
             authorizationType: AuthorizationType.IAM,
             requestValidatorOptions: {
                 validateRequestBody: true,

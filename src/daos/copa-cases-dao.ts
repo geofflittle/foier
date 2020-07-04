@@ -1,74 +1,43 @@
-import { request } from "../request"
+import { AttributeMap } from "aws-sdk/clients/dynamodbstreams"
+import { tableBatchPutItems } from "../aws-facades/ddb-facade"
+import { verifyDefined } from "./dao-utils"
 
-export interface CopaCase {
-    log_no: string
-    complaint_date: string
-    assignment: string
-    case_type: string
-    current_status: string
-    current_category: string
-    finding_code: string
-    police_shooting: string
-    beat: string
-    race_of_complainants: string
-    sex_of_complainants: string
-    age_of_complainants: string
-    race_of_involved_officers: string
-    sex_of_involved_officers: string
-    age_of_involved_officers: string
-    years_on_force_of_officers: string
-    complaint_hour: string
-    complaint_day: string
-    complaint_month: string
+export type FoiaRequestStatus = "NOT_SUBMITTED" | "SUBMITTED" | "FULFILLED"
+
+export interface CopaCaseFoiaRequest {
+    copaCaseId: string
+    complaintDateTime: string
+    foiaRequestStatus: FoiaRequestStatus
+    foiaRequestId?: string
 }
 
-export interface GetCopaCaseProps {
-    log_no: string
+export interface TableBatchPutCCFRs {
+    tableName: string
+    ccfrs: CopaCaseFoiaRequest[]
 }
 
-export const getCopaCase = async (props: GetCopaCaseProps): Promise<CopaCase | undefined> => {
-    const res = await request({
-        host: "data.cityofchicago.org",
-        port: 443,
-        path: `/resource/mft5-nfa8.json/?log_no=${encodeURIComponent(props.log_no)}`
-    })
-    const cases = JSON.parse(res.body)
-    if (cases.length <= 0) {
-        return Promise.resolve(undefined)
+export const tableBatchPutCCFRs = async ({ tableName, ccfrs }: TableBatchPutCCFRs): Promise<CopaCaseFoiaRequest[]> => {
+    const items = ccfrs.map(ccfrToItem)
+    const unprocessedItems = await tableBatchPutItems({ tableName, items })
+    return unprocessedItems.map(itemToCCFR)
+}
+
+const ccfrToItem = (ccfr: CopaCaseFoiaRequest): AttributeMap => {
+    return {
+        copaCaseId: { S: ccfr.copaCaseId },
+        complaintDateTime: { S: ccfr.complaintDateTime },
+        foiaRequestStatus: { S: ccfr.foiaRequestStatus },
+        ...(ccfr.foiaRequestId ? { foiaRequestId: { S: ccfr.foiaRequestId } } : {})
     }
-    return cases[0]
 }
 
-export interface QueryCopaCasesProps {
-    limit?: number
-    orderBy?: {
-        column: "complaint_date"
-        order: "ASC" | "DESC"
+const itemToCCFR = (item: AttributeMap): CopaCaseFoiaRequest => {
+    return {
+        copaCaseId: verifyItemAttrValS(item, "copaCaseId"),
+        complaintDateTime: verifyItemAttrValS(item, "complaintDateTime"),
+        foiaRequestStatus: verifyItemAttrValS(item, "foiaRequestStatus") as FoiaRequestStatus,
+        foiaRequestId: item["foiaRequestId"]?.S
     }
-    current_status?: string
-    current_category?: string
 }
 
-export const queryCopaCases = async (props: QueryCopaCasesProps): Promise<CopaCase[]> => {
-    const queryString = getQueryString(props)
-    const res = await request({
-        host: "data.cityofchicago.org",
-        port: 443,
-        path: `/resource/mft5-nfa8.json/?${queryString}`
-    })
-    return JSON.parse(res.body)
-}
-
-const getQueryString = (props: QueryCopaCasesProps) => {
-    const limitQueryString = props.limit ? `$limit=${encodeURIComponent(props.limit)}` : ""
-    const orderQueryString = props.orderBy
-        ? `$order=${encodeURIComponent(props.orderBy.column + " " + props.orderBy.order)}`
-        : ""
-    const currentStatusQueryString = props.current_status
-        ? `current_status=${encodeURIComponent(props.current_status)}`
-        : ""
-    const currentCategoryQueryString = props.current_category
-        ? `current_category=${encodeURIComponent(props.current_category)}`
-        : ""
-    return [limitQueryString, orderQueryString, currentStatusQueryString, currentCategoryQueryString].join("&")
-}
+const verifyItemAttrValS = (item: AttributeMap, attrName: string) => verifyDefined(item[attrName].S, attrName)
