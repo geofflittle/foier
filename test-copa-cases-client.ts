@@ -1,6 +1,5 @@
 import { getCopaCase, queryCopaCases } from "./src/clients/copa-cases-client"
-;
-(async () => {
+;(async () => {
     const copaCases = await queryCopaCases({
         limit: 2,
         orderBy: {

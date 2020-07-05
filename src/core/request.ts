@@ -9,14 +9,12 @@ interface Response {
     body: Buffer
 }
 
-export const request = (options: RequestOptions): Promise<Response> => {
-    console.log({ options })
+export const get = (opts: RequestOptions): Promise<Response> => {
+    console.log({ opts })
     return new Promise<Response>((resolve, reject) => {
         const chunks: Uint8Array[] = []
-        https.get(options, (res) => {
-            res.on("error", (err) => {
-                reject(err)
-            })
+        https.get(opts, (res) => {
+            res.on("error", (err) => reject(err))
             res.on("data", (chunk) => chunks.push(chunk))
             res.on("end", () => {
                 resolve({
@@ -27,5 +25,33 @@ export const request = (options: RequestOptions): Promise<Response> => {
                 })
             })
         })
+    })
+}
+
+export const post = (opts: RequestOptions, data: string): Promise<Response> => {
+    console.log({ opts })
+    return new Promise<Response>((resolve, reject) => {
+        const chunks: Uint8Array[] = []
+        const req = https.request(
+            {
+                ...opts,
+                method: "POST"
+            },
+            (res) => {
+                res.on("error", (error) => reject(error))
+                res.on("data", (chunk) => chunks.push(chunk))
+                res.on("end", () => {
+                    resolve({
+                        statusCode: res.statusCode,
+                        headers: res.headers,
+                        statusMessage: res.statusMessage,
+                        body: Buffer.concat(chunks)
+                    })
+                })
+            }
+        )
+        req.on("error", (error) => reject(error))
+        req.write(data)
+        req.end()
     })
 }

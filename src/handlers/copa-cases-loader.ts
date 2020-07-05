@@ -1,8 +1,7 @@
-import { CopaCase, getCopaCase } from "../clients/copa-cases-client"
-
 import { APIGatewayProxyHandler } from "aws-lambda"
 import { asyncReduce } from "../core/utils"
-import { tableBatchPutCCFRs } from "../daos/copa-cases-dao"
+import { getCopaCase } from "../clients/copa-cases-client"
+import { tablePutCCFR } from "../daos/copa-cases-dao"
 import { verifyPropDefined } from "../daos/dao-utils"
 
 export const handler: APIGatewayProxyHandler = async (event) => {
@@ -23,11 +22,11 @@ export const handler: APIGatewayProxyHandler = async (event) => {
             body: "No cases"
         }
     }
-    const failedCases = await loadCases(env.CCFR_TABLE_NAME, caseNumbers)
-    console.log({ failedCases })
+    const loadResult = await loadCases(env.CCFR_TABLE_NAME, caseNumbers)
+    console.log({ loadResult })
     return {
         statusCode: 200,
-        body: "{}"
+        body: JSON.stringify(loadResult)
     }
 }
 
@@ -40,45 +39,43 @@ const verifyEnv = (): CopaCasesLoaderEnv => ({
 })
 
 interface CreateCasesReductionProps {
-    cases: CopaCase[]
-    notFoundCases: string[]
+    loaded: string[]
+    notFound: string[]
+    present: string[]
 }
 
 const loadCases = async (tableName: string, caseNumbers: string[]) => {
-    const res = await asyncReduce(
+    return await asyncReduce(
         caseNumbers,
         async (acc: CreateCasesReductionProps, cur: string) => {
             const copaCase = await getCopaCase({ log_no: cur })
             if (!copaCase) {
                 console.log({ message: `Copa case ${cur} not found` })
                 return {
-                    cases: acc.cases,
-                    notFoundCases: acc.notFoundCases.concat([cur])
+                    ...acc,
+                    notFound: acc.notFound.concat([cur])
+                }
+            }
+            try {
+                await tablePutCCFR({
+                    tableName,
+                    ccfr: {
+                        copaCaseId: copaCase.log_no,
+                        complaintDateTime: copaCase.complaint_date,
+                        foiaRequestStatus: "NOT_SUBMITTED"
+                    }
+                })
+            } catch (err) {
+                return {
+                    ...acc,
+                    present: acc.present.concat([cur])
                 }
             }
             return {
-                cases: acc.cases.concat([copaCase]),
-                notFoundCases: acc.notFoundCases
+                ...acc,
+                loaded: acc.loaded.concat([cur])
             }
         },
-        { cases: [], notFoundCases: [] }
+        { loaded: [], notFound: [], present: [] }
     )
-    if (!res.cases || res.cases.length <= 0) {
-        return {
-            notFoundCases: res.notFoundCases,
-            unprocessedCases: []
-        }
-    }
-    const unprocessedCases = await tableBatchPutCCFRs({
-        tableName,
-        ccfrs: res.cases.map((copaCase) => ({
-            copaCaseId: copaCase.log_no,
-            complaintDateTime: copaCase.complaint_date,
-            foiaRequestStatus: "NOT_SUBMITTED"
-        }))
-    })
-    return {
-        notFoundCases: res.notFoundCases,
-        unprocessedCases: unprocessedCases.map((unprocessedCase) => unprocessedCase.copaCaseId)
-    }
 }

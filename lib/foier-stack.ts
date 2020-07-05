@@ -1,9 +1,15 @@
 import path = require("path")
 
 import { AttributeType, Table } from "@aws-cdk/aws-dynamodb"
-import { AuthorizationType, JsonSchemaType, LambdaIntegration, RestApi } from "@aws-cdk/aws-apigateway"
+import {
+    AuthorizationType,
+    JsonSchemaType,
+    LambdaIntegration,
+    MethodLoggingLevel,
+    RestApi
+} from "@aws-cdk/aws-apigateway"
 import { Code, Function, Runtime } from "@aws-cdk/aws-lambda"
-import { Construct, Stack } from "@aws-cdk/core"
+import { Construct, Duration, Stack } from "@aws-cdk/core"
 
 export class FoierStack extends Stack {
     constructor(scope: Construct, id: string) {
@@ -20,13 +26,20 @@ export class FoierStack extends Stack {
             code: Code.fromAsset(path.join(process.cwd(), "dist")),
             runtime: Runtime.NODEJS_12_X,
             handler: "handlers/copa-cases-loader.handler",
+            timeout: Duration.minutes(15),
             environment: {
                 CCFR_TABLE_NAME: ccfrTable.tableName
             }
         })
         ccfrTable.grantWriteData(copaCasesLoader)
 
-        const api = new RestApi(this, "FoierApi")
+        const api = new RestApi(this, "FoierApi", {
+            deployOptions: {
+                dataTraceEnabled: true,
+                loggingLevel: MethodLoggingLevel.INFO,
+                metricsEnabled: true
+            }
+        })
 
         const casesRequestModel = api.addModel("CreateCasesRequestModel", {
             modelName: "CreateCasesRequestModel",
@@ -44,6 +57,37 @@ export class FoierStack extends Stack {
                     }
                 },
                 required: ["cases"]
+            }
+        })
+
+        const casesResponseModel = api.addModel("CreateCasesResponseModel", {
+            modelName: "CreateCasesResponseModel",
+            contentType: "application/json",
+            schema: {
+                type: JsonSchemaType.OBJECT,
+                properties: {
+                    loaded: {
+                        type: JsonSchemaType.ARRAY,
+                        items: {
+                            type: JsonSchemaType.STRING,
+                            minLength: 1
+                        }
+                    },
+                    notFound: {
+                        type: JsonSchemaType.ARRAY,
+                        items: {
+                            type: JsonSchemaType.STRING,
+                            minLength: 1
+                        }
+                    },
+                    present: {
+                        type: JsonSchemaType.ARRAY,
+                        items: {
+                            type: JsonSchemaType.STRING,
+                            minLength: 1
+                        }
+                    }
+                }
             }
         })
 
@@ -70,7 +114,10 @@ export class FoierStack extends Stack {
             requestModels: { "application/json": casesRequestModel },
             methodResponses: [
                 {
-                    statusCode: "200"
+                    statusCode: "200",
+                    responseModels: {
+                        "application/json": casesResponseModel
+                    }
                 },
                 {
                     statusCode: "400",

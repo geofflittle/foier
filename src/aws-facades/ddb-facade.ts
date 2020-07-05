@@ -5,6 +5,22 @@ import { DynamoDB } from "aws-sdk"
 
 const dynamoDb = new DynamoDB({ region: "us-east-1" })
 
+export interface TablePutItem {
+    tableName: string
+    item: AttributeMap
+    conditionExpression: string
+}
+
+export const tablePutItem = async ({ tableName, item, conditionExpression }: TablePutItem): Promise<void> => {
+    await dynamoDb
+        .putItem({
+            TableName: tableName,
+            Item: item,
+            ConditionExpression: conditionExpression
+        })
+        .promise()
+}
+
 interface BatchWriteItems {
     tableName: string
     items: PutItemInputAttributeMap[]

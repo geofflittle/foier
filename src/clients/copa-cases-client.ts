@@ -1,4 +1,4 @@
-import { request } from "../core/request"
+import { get } from "../core/request"
 
 export interface CopaCase {
     log_no: string
@@ -27,7 +27,7 @@ export interface GetCopaCaseProps {
 }
 
 export const getCopaCase = async (props: GetCopaCaseProps): Promise<CopaCase | undefined> => {
-    const res = await request({
+    const res = await get({
         host: "data.cityofchicago.org",
         port: 443,
         path: `/resource/mft5-nfa8.json/?log_no=${encodeURIComponent(props.log_no)}`
@@ -45,15 +45,16 @@ export interface QueryCopaCasesProps {
         column: "complaint_date"
         order: "ASC" | "DESC"
     }
+    where?: string
     current_status?: string
     current_category?: string
 }
 
 export const queryCopaCases = async (props: QueryCopaCasesProps): Promise<CopaCase[]> => {
     const queryString = getQueryString(props)
-    const res = await request({
-        host: "data.cityofchicago.org",
+    const res = await get({
         port: 443,
+        host: "data.cityofchicago.org",
         path: `/resource/mft5-nfa8.json/?${queryString}`
     })
     return JSON.parse(res.body.toString())
@@ -64,11 +65,18 @@ const getQueryString = (props: QueryCopaCasesProps) => {
     const orderQueryString = props.orderBy
         ? `$order=${encodeURIComponent(props.orderBy.column + " " + props.orderBy.order)}`
         : ""
+    const whereQueryString = props.where ? `$where=${encodeURIComponent(props.where)}` : ""
     const currentStatusQueryString = props.current_status
         ? `current_status=${encodeURIComponent(props.current_status)}`
         : ""
     const currentCategoryQueryString = props.current_category
         ? `current_category=${encodeURIComponent(props.current_category)}`
         : ""
-    return [limitQueryString, orderQueryString, currentStatusQueryString, currentCategoryQueryString].join("&")
+    return [
+        limitQueryString,
+        orderQueryString,
+        whereQueryString,
+        currentStatusQueryString,
+        currentCategoryQueryString
+    ].join("&")
 }

@@ -7,4 +7,4 @@ export const verifyDefined = <T>(v: T | undefined, name: string): T => {
     return v
 }
 
-export const verifyPropDefined = <T extends StringKeyObj>(t: T, key: string): T => verifyDefined(t[key], key) as T
+export const verifyPropDefined = <T extends StringKeyObj, U>(t: T, key: string): U => verifyDefined(t[key], key) as U

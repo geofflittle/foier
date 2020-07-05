@@ -1,5 +1,6 @@
+import { tableBatchPutItems, tablePutItem } from "../aws-facades/ddb-facade"
+
 import { AttributeMap } from "aws-sdk/clients/dynamodbstreams"
-import { tableBatchPutItems } from "../aws-facades/ddb-facade"
 import { verifyDefined } from "./dao-utils"
 
 export type FoiaRequestStatus = "NOT_SUBMITTED" | "SUBMITTED" | "FULFILLED"
@@ -9,6 +10,19 @@ export interface CopaCaseFoiaRequest {
     complaintDateTime: string
     foiaRequestStatus: FoiaRequestStatus
     foiaRequestId?: string
+}
+
+export interface TablePutCCFR {
+    tableName: string
+    ccfr: CopaCaseFoiaRequest
+}
+
+export const tablePutCCFR = async ({ tableName, ccfr }: TablePutCCFR): Promise<void> => {
+    await tablePutItem({
+        tableName,
+        item: ccfrToItem(ccfr),
+        conditionExpression: "attribute_not_exists(copaCaseId)"
+    })
 }
 
 export interface TableBatchPutCCFRs {
