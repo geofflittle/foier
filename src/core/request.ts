@@ -28,30 +28,28 @@ export const get = (opts: RequestOptions): Promise<Response> => {
     })
 }
 
-export const post = (opts: RequestOptions, data: string): Promise<Response> => {
-    console.log({ opts })
+export const request = (opts: RequestOptions, data?: string): Promise<Response> => {
     return new Promise<Response>((resolve, reject) => {
         const chunks: Uint8Array[] = []
-        const req = https.request(
-            {
-                ...opts,
-                method: "POST"
-            },
-            (res) => {
-                res.on("error", (error) => reject(error))
-                res.on("data", (chunk) => chunks.push(chunk))
-                res.on("end", () => {
-                    resolve({
-                        statusCode: res.statusCode,
-                        headers: res.headers,
-                        statusMessage: res.statusMessage,
-                        body: Buffer.concat(chunks)
-                    })
+        const req = { ...opts, ...(data ? { method: "POST" } : {}) }
+        console.log({ req })
+        const clientRequest = https[data ? "request" : "get"](req, (res) => {
+            res.on("error", (error) => reject(error))
+            res.on("data", (chunk) => chunks.push(chunk))
+            res.on("end", () => {
+                resolve({
+                    statusCode: res.statusCode,
+                    headers: res.headers,
+                    statusMessage: res.statusMessage,
+                    body: Buffer.concat(chunks)
                 })
-            }
-        )
-        req.on("error", (error) => reject(error))
-        req.write(data)
-        req.end()
+            })
+        })
+        if (!data) {
+            return
+        }
+        clientRequest.on("error", (error) => reject(error))
+        clientRequest.write(data)
+        clientRequest.end()
     })
 }

@@ -1,4 +1,4 @@
-import { tableBatchPutItems, tablePutItem } from "../aws-facades/ddb-facade"
+import { tableBatchPutItems, tablePutItem, tableQueryAllItems, tableQueryItems } from "../aws-facades/ddb-facade"
 
 import { AttributeMap } from "aws-sdk/clients/dynamodbstreams"
 import { verifyDefined } from "./dao-utils"
@@ -12,12 +12,12 @@ export interface CopaCaseFoiaRequest {
     foiaRequestId?: string
 }
 
-export interface TablePutCCFR {
+export interface TablePutCCFRProps {
     tableName: string
     ccfr: CopaCaseFoiaRequest
 }
 
-export const tablePutCCFR = async ({ tableName, ccfr }: TablePutCCFR): Promise<void> => {
+export const tablePutCCFR = async ({ tableName, ccfr }: TablePutCCFRProps): Promise<void> => {
     await tablePutItem({
         tableName,
         item: ccfrToItem(ccfr),
@@ -25,15 +25,33 @@ export const tablePutCCFR = async ({ tableName, ccfr }: TablePutCCFR): Promise<v
     })
 }
 
-export interface TableBatchPutCCFRs {
+export interface TableBatchPutCCFRsProps {
     tableName: string
     ccfrs: CopaCaseFoiaRequest[]
 }
 
-export const tableBatchPutCCFRs = async ({ tableName, ccfrs }: TableBatchPutCCFRs): Promise<CopaCaseFoiaRequest[]> => {
+export const tableBatchPutCCFRs = async ({
+    tableName,
+    ccfrs
+}: TableBatchPutCCFRsProps): Promise<CopaCaseFoiaRequest[]> => {
     const items = ccfrs.map(ccfrToItem)
     const unprocessedItems = await tableBatchPutItems({ tableName, items })
     return unprocessedItems.map(itemToCCFR)
+}
+
+export interface TableQueryAllCCFRsByStatusProps {
+    tableName: string
+    foiaRequestStatus: FoiaRequestStatus
+}
+
+export const tableQueryAllCCFRsByStatus = async ({ tableName, foiaRequestStatus }: TableQueryAllCCFRsByStatusProps) => {
+    const res = await tableQueryAllItems({
+        tableName,
+        indexName: "foiaRequestStatusIndex",
+        partitionKeyName: "foiaRequestStatus",
+        partitionKeyValue: foiaRequestStatus
+    })
+    return res.map(itemToCCFR)
 }
 
 const ccfrToItem = (ccfr: CopaCaseFoiaRequest): AttributeMap => {

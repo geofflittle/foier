@@ -10,6 +10,9 @@ import {
 } from "@aws-cdk/aws-apigateway"
 import { Code, Function, Runtime } from "@aws-cdk/aws-lambda"
 import { Construct, Duration, Stack } from "@aws-cdk/core"
+import { Rule, Schedule } from "@aws-cdk/aws-events"
+
+import { LambdaFunction } from "@aws-cdk/aws-events-targets"
 
 export class FoierStack extends Stack {
     constructor(scope: Construct, id: string) {
@@ -21,6 +24,32 @@ export class FoierStack extends Stack {
                 type: AttributeType.STRING
             }
         })
+        ccfrTable.addGlobalSecondaryIndex({
+            indexName: "foiaRequestStatusIndex",
+            partitionKey: {
+                name: "foiaRequestStatus",
+                type: AttributeType.STRING
+            },
+            sortKey: {
+                name: "copaCaseId",
+                type: AttributeType.STRING
+            }
+        })
+
+        const rule = new Rule(this, "FoiaRequestStatusCheckerRule", {
+            schedule: Schedule.rate(Duration.days(1))
+        })
+        const requestStatusChecker = new Function(this, "CopaCasesLoader", {
+            code: Code.fromAsset(path.join(process.cwd(), "dist")),
+            runtime: Runtime.NODEJS_12_X,
+            handler: "handlers/request-status-checker.handler",
+            timeout: Duration.minutes(15),
+            environment: {
+                CCFR_TABLE_NAME: ccfrTable.tableName
+            }
+        })
+        rule.addTarget(new LambdaFunction(requestStatusChecker))
+        ccfrTable.grantReadData(requestStatusChecker)
 
         const copaCasesLoader = new Function(this, "CopaCasesLoader", {
             code: Code.fromAsset(path.join(process.cwd(), "dist")),
