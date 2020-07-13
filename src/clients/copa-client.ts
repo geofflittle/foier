@@ -1,4 +1,5 @@
 import { get } from "../core/request"
+import got from "got/dist/source"
 
 export interface CopaCase {
     log_no: string
@@ -27,12 +28,13 @@ export interface GetCopaCaseProps {
 }
 
 export const getCopaCase = async (props: GetCopaCaseProps): Promise<CopaCase | undefined> => {
-    const res = await get({
-        host: "data.cityofchicago.org",
-        port: 443,
-        path: `/resource/mft5-nfa8.json/?log_no=${encodeURIComponent(props.log_no)}`
-    })
-    const cases = JSON.parse(res.body.toString())
+    const res = await got.get(
+        `https://data.cityofchicago.org/resource/mft5-nfa8.json/?log_no=${encodeURIComponent(props.log_no)}`,
+        {
+            responseType: "json"
+        }
+    )
+    const cases = res.body as CopaCase[]
     if (cases.length <= 0) {
         return Promise.resolve(undefined)
     }
@@ -52,12 +54,10 @@ export interface QueryCopaCasesProps {
 
 export const queryCopaCases = async (props: QueryCopaCasesProps): Promise<CopaCase[]> => {
     const queryString = getQueryString(props)
-    const res = await get({
-        port: 443,
-        host: "data.cityofchicago.org",
-        path: `/resource/mft5-nfa8.json/?${queryString}`
+    const res = await got.get(`https://data.cityofchicago.org/resource/mft5-nfa8.json/?${queryString}`, {
+        responseType: "json"
     })
-    return JSON.parse(res.body.toString())
+    return res.body as CopaCase[]
 }
 
 const getQueryString = (props: QueryCopaCasesProps) => {

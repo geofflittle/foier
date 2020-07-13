@@ -1,12 +1,12 @@
 import { APIGatewayProxyHandler } from "aws-lambda"
 import { asyncReduce } from "../core/utils"
-import { getCopaCase } from "../clients/copa-cases-client"
-import { tablePutCCFR } from "../daos/ccfr-dao"
+import { getCopaCase } from "../clients/copa-client"
+import { tableCreateCCFR } from "../daos/ccfr-dao"
 import { verifyPropDefined } from "../daos/dao-utils"
 
 export const handler: APIGatewayProxyHandler = async (event) => {
     const env = verifyEnv()
-    console.log({ env })
+    console.dir({ env }, { depth: null })
     if (!event.body) {
         return {
             statusCode: 400,
@@ -15,7 +15,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     }
     const bodyJson = JSON.parse(event.body)
     const caseNumbers = bodyJson.cases.filter((caseNumber: string) => caseNumber.length >= 0)
-    console.log({ caseNumbers })
+    console.dir({ caseNumbers }, { depth: null })
     if (!caseNumbers || caseNumbers.length <= 0) {
         return {
             statusCode: 400,
@@ -23,7 +23,7 @@ export const handler: APIGatewayProxyHandler = async (event) => {
         }
     }
     const loadResult = await loadCases(env.CCFR_TABLE_NAME, caseNumbers)
-    console.log({ loadResult })
+    console.dir({ loadResult }, { depth: null })
     return {
         statusCode: 200,
         body: JSON.stringify(loadResult)
@@ -50,14 +50,14 @@ const loadCases = async (tableName: string, caseNumbers: string[]) => {
         async (acc: CreateCasesReductionProps, cur: string) => {
             const copaCase = await getCopaCase({ log_no: cur })
             if (!copaCase) {
-                console.log({ message: `Copa case ${cur} not found` })
+                console.dir({ message: `Copa case ${cur} not found` }, { depth: null })
                 return {
                     ...acc,
                     notFound: acc.notFound.concat([cur])
                 }
             }
             try {
-                await tablePutCCFR({
+                await tableCreateCCFR({
                     tableName,
                     ccfr: {
                         copaCaseId: copaCase.log_no,

@@ -1,5 +1,5 @@
 import { execSync } from "child_process"
-import { queryCopaCases } from "./src/clients/copa-cases-client"
+import { queryCopaCases } from "./src/clients/copa-client"
 
 const main = async () => {
     const copaCases = await queryCopaCases({
@@ -12,7 +12,7 @@ const main = async () => {
         current_status: "Closed",
         current_category: "Excessive Force"
     })
-    console.log({ res: copaCases })
+    console.dir({ res: copaCases }, { depth: null })
     const data = {
         cases: copaCases.map((copaCase) => copaCase.log_no)
     }
@@ -21,7 +21,7 @@ const main = async () => {
             data
         )}'`
     ).toString()
-    console.log({ stdout })
+    console.dir({ stdout }, { depth: null })
 }
 
 main()

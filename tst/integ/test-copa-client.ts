@@ -1,5 +1,6 @@
-import { getCopaCase, queryCopaCases } from "./src/clients/copa-cases-client"
-;(async () => {
+import { getCopaCase, queryCopaCases } from "../../src/clients/copa-client"
+;
+(async () => {
     const copaCases = await queryCopaCases({
         limit: 2,
         orderBy: {
@@ -9,9 +10,9 @@ import { getCopaCase, queryCopaCases } from "./src/clients/copa-cases-client"
         current_status: "Closed",
         current_category: "Excessive Force"
     })
-    console.log({ res: copaCases })
+    console.dir({ res: copaCases }, { depth: null })
     const copaCase = await getCopaCase({
         log_no: "2020-0002737"
     })
-    console.log({ copaCase })
+    console.dir({ copaCase }, { depth: null })
 })()

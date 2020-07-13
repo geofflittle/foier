@@ -10,7 +10,7 @@ export const handler: ScheduledHandler = async () => {
         tableName: env.CCFR_TABLE_NAME,
         foiaRequestStatus: "SUBMITTED"
     })
-    console.log({ ccfrs })
+    console.dir({ ccfrs }, { depth: null })
     ccfrs.forEach(async (ccfr) => {
         if (!ccfr.foiaRequestId) {
             console.error({
@@ -40,24 +40,30 @@ export const handler: ScheduledHandler = async () => {
             return
         }
         if (foiaRequest.status != "done") {
-            console.log({
-                copaCaseId: ccfr.copaCaseId,
-                foiaRequestId: ccfr.foiaRequestId,
-                foiaRequestStatus: foiaRequest.status,
-                message: `Foia request status is not 'done', nothing to update`
-            })
+            console.dir(
+                {
+                    copaCaseId: ccfr.copaCaseId,
+                    foiaRequestId: ccfr.foiaRequestId,
+                    foiaRequestStatus: foiaRequest.status,
+                    message: `Foia request status is not 'done', nothing to update`
+                },
+                { depth: null }
+            )
             await tableUpdateCCFR({
                 tableName: env.CCFR_TABLE_NAME,
                 ccfr: ccfr
             })
             return
         }
-        console.log({
-            copaCaseId: ccfr.copaCaseId,
-            foiaRequestId: ccfr.foiaRequestId,
-            foiaRequestStatus: foiaRequest.status,
-            message: `Foia request status is 'done'`
-        })
+        console.dir(
+            {
+                copaCaseId: ccfr.copaCaseId,
+                foiaRequestId: ccfr.foiaRequestId,
+                foiaRequestStatus: foiaRequest.status,
+                message: `Foia request status is 'done'`
+            },
+            { depth: null }
+        )
         await tableUpdateCCFR({
             tableName: env.CCFR_TABLE_NAME,
             ccfr: {

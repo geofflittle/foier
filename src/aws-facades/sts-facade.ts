@@ -1,6 +1,6 @@
 import STS, { Credentials } from "aws-sdk/clients/sts"
 
-const sts = new STS({ region: "us-east-1" })
+const sts = new STS()
 
 export const getSessionToken = async (): Promise<Credentials> => {
     const res = await sts.getSessionToken().promise()

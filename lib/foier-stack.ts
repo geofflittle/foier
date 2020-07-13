@@ -18,7 +18,9 @@ export class FoierStack extends Stack {
     constructor(scope: Construct, id: string) {
         super(scope, id)
 
-        const ccfrTable = new Table(this, "CopaCaseFoiaRequests", {
+        const ccfrTableName = "CopaCaseFoiaRequests"
+        const ccfrTable = new Table(this, ccfrTableName, {
+            tableName: ccfrTableName,
             partitionKey: {
                 name: "copaCaseId",
                 type: AttributeType.STRING
@@ -36,10 +38,15 @@ export class FoierStack extends Stack {
             }
         })
 
-        const rule = new Rule(this, "FoiaRequestStatusCheckerRule", {
+        const frsUpdaterRuleName = "FoiaRequestStatusUpdaterRule"
+        const frsUpdaterRule = new Rule(this, frsUpdaterRuleName, {
+            ruleName: frsUpdaterRuleName,
             schedule: Schedule.rate(Duration.days(1))
         })
-        const requestStatusChecker = new Function(this, "CopaCasesLoader", {
+
+        const frsUpdaterFunctionName = "FoiaRequestStatusUpdaterFunction"
+        const frsUpdaterFuncion = new Function(this, frsUpdaterFunctionName, {
+            functionName: frsUpdaterFunctionName,
             code: Code.fromAsset(path.join(process.cwd(), "dist")),
             runtime: Runtime.NODEJS_12_X,
             handler: "handlers/request-status-checker.handler",
@@ -48,10 +55,12 @@ export class FoierStack extends Stack {
                 CCFR_TABLE_NAME: ccfrTable.tableName
             }
         })
-        rule.addTarget(new LambdaFunction(requestStatusChecker))
-        ccfrTable.grantReadData(requestStatusChecker)
+        frsUpdaterRule.addTarget(new LambdaFunction(frsUpdaterFuncion))
+        ccfrTable.grantReadData(frsUpdaterFuncion)
 
-        const copaCasesLoader = new Function(this, "CopaCasesLoader", {
+        const cciFunctionName = "CopaCasesInserterFunction"
+        const copaCasesInserterFunction = new Function(this, cciFunctionName, {
+            functionName: cciFunctionName,
             code: Code.fromAsset(path.join(process.cwd(), "dist")),
             runtime: Runtime.NODEJS_12_X,
             handler: "handlers/copa-cases-loader.handler",
@@ -60,9 +69,11 @@ export class FoierStack extends Stack {
                 CCFR_TABLE_NAME: ccfrTable.tableName
             }
         })
-        ccfrTable.grantWriteData(copaCasesLoader)
+        ccfrTable.grantWriteData(copaCasesInserterFunction)
 
-        const api = new RestApi(this, "FoierApi", {
+        const foierApiName = "FoierApi"
+        const foierApi = new RestApi(this, foierApiName, {
+            restApiName: foierApiName,
             deployOptions: {
                 dataTraceEnabled: true,
                 loggingLevel: MethodLoggingLevel.INFO,
@@ -70,8 +81,9 @@ export class FoierStack extends Stack {
             }
         })
 
-        const casesRequestModel = api.addModel("CreateCasesRequestModel", {
-            modelName: "CreateCasesRequestModel",
+        const cccRequestModelName = "CreateCopaCasesRequestModel"
+        const casesRequestModel = foierApi.addModel(cccRequestModelName, {
+            modelName: cccRequestModelName,
             contentType: "application/json",
             schema: {
                 type: JsonSchemaType.OBJECT,
@@ -89,8 +101,9 @@ export class FoierStack extends Stack {
             }
         })
 
-        const casesResponseModel = api.addModel("CreateCasesResponseModel", {
-            modelName: "CreateCasesResponseModel",
+        const cccResponseModelName = "CreateCopaCasesResponseModel"
+        const casesResponseModel = foierApi.addModel(cccResponseModelName, {
+            modelName: cccResponseModelName,
             contentType: "application/json",
             schema: {
                 type: JsonSchemaType.OBJECT,
@@ -120,8 +133,9 @@ export class FoierStack extends Stack {
             }
         })
 
-        const messageModel = api.addModel("MessageModel", {
-            modelName: "MessageModel",
+        const messageModelName = "MessageModel"
+        const messageModel = foierApi.addModel(messageModelName, {
+            modelName: messageModelName,
             contentType: "application/json",
             schema: {
                 type: JsonSchemaType.OBJECT,
@@ -133,8 +147,9 @@ export class FoierStack extends Stack {
             }
         })
 
-        const casesResource = api.root.addResource("cases")
-        casesResource.addMethod("POST", new LambdaIntegration(copaCasesLoader), {
+        const casesResource = foierApi.root.addResource("cases")
+        casesResource.addMethod("POST", new LambdaIntegration(copaCasesInserterFunction), {
+            operationName: "InsertCopaCases",
             authorizationType: AuthorizationType.IAM,
             requestValidatorOptions: {
                 validateRequestBody: true,
