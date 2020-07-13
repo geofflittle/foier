@@ -1,4 +1,4 @@
-import { tableBatchPutItems, tablePutItem, tableQueryAllItems, tableQueryItems } from "../aws-facades/ddb-facade"
+import { tableBatchPutItems, tablePutItem, tableQueryAllItems } from "../aws-facades/ddb-facade"
 
 import { AttributeMap } from "aws-sdk/clients/dynamodbstreams"
 import { verifyDefined } from "./dao-utils"
@@ -10,18 +10,39 @@ export interface CopaCaseFoiaRequest {
     complaintDateTime: string
     foiaRequestStatus: FoiaRequestStatus
     foiaRequestId?: string
+    createdAt: string
+    updatedAt?: string
 }
 
-export interface TablePutCCFRProps {
+export interface TableCreateCCFRProps {
     tableName: string
     ccfr: CopaCaseFoiaRequest
 }
 
-export const tablePutCCFR = async ({ tableName, ccfr }: TablePutCCFRProps): Promise<void> => {
+export const tableCreateCCFR = async ({ tableName, ccfr }: TableCreateCCFRProps): Promise<void> => {
     await tablePutItem({
         tableName,
-        item: ccfrToItem(ccfr),
+        item: ccfrToItem({
+            ...ccfr,
+            createdAt: new Date().toString()
+        }),
         conditionExpression: "attribute_not_exists(copaCaseId)"
+    })
+}
+
+export interface TableUpdateCCFRProps {
+    tableName: string
+    ccfr: CopaCaseFoiaRequest
+}
+
+export const tableUpdateCCFR = async ({ tableName, ccfr }: TableUpdateCCFRProps): Promise<void> => {
+    await tablePutItem({
+        tableName,
+        item: ccfrToItem({
+            ...ccfr,
+            updatedAt: new Date().toString()
+        }),
+        conditionExpression: "attribute_exists(copaCaseId)"
     })
 }
 
@@ -59,7 +80,9 @@ const ccfrToItem = (ccfr: CopaCaseFoiaRequest): AttributeMap => {
         copaCaseId: { S: ccfr.copaCaseId },
         complaintDateTime: { S: ccfr.complaintDateTime },
         foiaRequestStatus: { S: ccfr.foiaRequestStatus },
-        ...(ccfr.foiaRequestId ? { foiaRequestId: { S: ccfr.foiaRequestId } } : {})
+        ...(ccfr.foiaRequestId ? { foiaRequestId: { S: ccfr.foiaRequestId } } : {}),
+        createdAt: { S: ccfr.createdAt },
+        ...(ccfr.updatedAt ? { updatedAt: { S: ccfr.updatedAt } } : {})
     }
 }
 
@@ -68,7 +91,9 @@ const itemToCCFR = (item: AttributeMap): CopaCaseFoiaRequest => {
         copaCaseId: verifyItemAttrValS(item, "copaCaseId"),
         complaintDateTime: verifyItemAttrValS(item, "complaintDateTime"),
         foiaRequestStatus: verifyItemAttrValS(item, "foiaRequestStatus") as FoiaRequestStatus,
-        foiaRequestId: item["foiaRequestId"]?.S
+        foiaRequestId: item["foiaRequestId"]?.S,
+        createdAt: verifyItemAttrValS(item, "createdAt"),
+        updatedAt: item["updatedAt"]?.S
     }
 }
 

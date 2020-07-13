@@ -14,11 +14,6 @@
         "infra:deploy": "cdk deploy",
         "deploy": "yarn clean && yarn backend:build && yarn infra:deploy"
     },
-    "husky": {
-        "hooks": {
-            "pre-push": "yarn lint && yarn format"
-        }
-    },
     "devDependencies": {
         "@aws-cdk/aws-apigateway": "^1.49.0",
         "@aws-cdk/aws-apigatewayv2": "^1.49.0",

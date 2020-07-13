@@ -1,7 +1,7 @@
 import { APIGatewayProxyHandler } from "aws-lambda"
 import { asyncReduce } from "../core/utils"
 import { getCopaCase } from "../clients/copa-cases-client"
-import { tablePutCCFR } from "../daos/copa-cases-dao"
+import { tablePutCCFR } from "../daos/ccfr-dao"
 import { verifyPropDefined } from "../daos/dao-utils"
 
 export const handler: APIGatewayProxyHandler = async (event) => {
