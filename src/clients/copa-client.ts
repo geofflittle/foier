@@ -1,4 +1,3 @@
-import { get } from "../core/request"
 import got from "got/dist/source"
 
 export interface CopaCase {

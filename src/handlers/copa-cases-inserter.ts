@@ -6,7 +6,7 @@ import { verifyPropDefined } from "../daos/dao-utils"
 
 export const handler: APIGatewayProxyHandler = async (event) => {
     const env = verifyEnv()
-    console.dir({ env }, { depth: null })
+    console.log({ module: "copa-cases-inserter", method: "handler", env })
     if (!event.body) {
         return {
             statusCode: 400,
@@ -15,18 +15,18 @@ export const handler: APIGatewayProxyHandler = async (event) => {
     }
     const bodyJson = JSON.parse(event.body)
     const caseNumbers = bodyJson.cases.filter((caseNumber: string) => caseNumber.length >= 0)
-    console.dir({ caseNumbers }, { depth: null })
+    console.log({ module: "copa-cases-inserter", method: "handler", caseNumbers })
     if (!caseNumbers || caseNumbers.length <= 0) {
         return {
             statusCode: 400,
             body: "No cases"
         }
     }
-    const loadResult = await loadCases(env.CCFR_TABLE_NAME, caseNumbers)
-    console.dir({ loadResult }, { depth: null })
+    const res = await insertCases(env.CCFR_TABLE_NAME, caseNumbers)
+    console.log({ module: "copa-cases-inserter", method: "handler", res })
     return {
         statusCode: 200,
-        body: JSON.stringify(loadResult)
+        body: JSON.stringify(res)
     }
 }
 
@@ -38,19 +38,24 @@ const verifyEnv = (): CopaCasesLoaderEnv => ({
     CCFR_TABLE_NAME: verifyPropDefined(process.env, "CCFR_TABLE_NAME")
 })
 
-interface CreateCasesReductionProps {
-    loaded: string[]
+interface InsertCasesResult {
+    inserted: string[]
     notFound: string[]
     present: string[]
 }
 
-const loadCases = async (tableName: string, caseNumbers: string[]) => {
+const insertCases = async (tableName: string, caseNumbers: string[]): Promise<InsertCasesResult> => {
     return await asyncReduce(
         caseNumbers,
-        async (acc: CreateCasesReductionProps, cur: string) => {
+        async (acc: InsertCasesResult, cur: string) => {
             const copaCase = await getCopaCase({ log_no: cur })
             if (!copaCase) {
-                console.dir({ message: `Copa case ${cur} not found` }, { depth: null })
+                console.log({
+                    module: "copa-cases-inserter",
+                    method: "handler",
+                    copaCaseId: cur,
+                    message: `Copa case not found`
+                })
                 return {
                     ...acc,
                     notFound: acc.notFound.concat([cur])
@@ -65,17 +70,30 @@ const loadCases = async (tableName: string, caseNumbers: string[]) => {
                         foiaRequestStatus: "NOT_SUBMITTED"
                     }
                 })
+                console.log({
+                    module: "copa-cases-inserter",
+                    method: "handler",
+                    copaCaseId: cur,
+                    message: `Copa case inserted`
+                })
+                return {
+                    ...acc,
+                    inserted: acc.inserted.concat([cur])
+                }
             } catch (err) {
+                console.error({ type: err.type, message: err.message, stack: err.stack })
+                console.log({
+                    module: "copa-cases-inserter",
+                    method: "handler",
+                    copaCaseId: cur,
+                    message: `Copa case already exists`
+                })
                 return {
                     ...acc,
                     present: acc.present.concat([cur])
                 }
             }
-            return {
-                ...acc,
-                loaded: acc.loaded.concat([cur])
-            }
         },
-        { loaded: [], notFound: [], present: [] }
+        { inserted: [], notFound: [], present: [] }
     )
 }

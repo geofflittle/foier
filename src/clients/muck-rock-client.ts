@@ -24,7 +24,7 @@ export interface RequestComm {
     full_html: boolean
     communication: string
     status: string
-    likely_foia: any
+    likely_foia: number
     files: CommFile[]
     delivered: string
 }
@@ -41,10 +41,10 @@ export interface FoiaRequest {
     agency: number
     datetime_submitted: string
     date_due: string
-    days_until_due: any
-    date_followup: any
+    days_until_due: number
+    date_followup: string
     datetime_done: string
-    date_embargo: any
+    date_embargo: string
     tracking_id: string
     price: string
     disable_autofollowups: boolean
@@ -62,6 +62,34 @@ export const getFoiaRequest = async ({ id }: GetFoiaRequestProps): Promise<FoiaR
             responseType: "json"
         })
         return res.body as FoiaRequest
+    } catch (err) {
+        if (err.message != "Response code 404 (Not Found)") {
+            throw err
+        }
+    }
+    return undefined
+}
+
+export interface CreateFoiaRequestProps {
+    apiToken: string
+    title: string
+    agency: string
+    documentRequest: string
+}
+
+export const createFoiaRequest = async ({
+    apiToken,
+    title,
+    agency,
+    documentRequest
+}: CreateFoiaRequestProps): Promise<unknown> => {
+    try {
+        const res = await got.post(`https://muckrock.com/api_v1/foia`, {
+            headers: { Authorization: `Token ${apiToken}`, "content-type": "application/json" },
+            body: JSON.stringify({ title, agency, document_request: documentRequest }),
+            responseType: "json"
+        })
+        return res.body
     } catch (err) {
         if (err.message != "Response code 404 (Not Found)") {
             throw err

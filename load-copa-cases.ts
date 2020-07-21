@@ -3,7 +3,7 @@ import { queryCopaCases } from "./src/clients/copa-client"
 
 const main = async () => {
     const copaCases = await queryCopaCases({
-        limit: 21,
+        limit: 2,
         orderBy: {
             column: "complaint_date",
             order: "DESC"
@@ -12,7 +12,7 @@ const main = async () => {
         current_status: "Closed",
         current_category: "Excessive Force"
     })
-    console.dir({ res: copaCases }, { depth: null })
+    console.log({ res: copaCases })
     const data = {
         cases: copaCases.map((copaCase) => copaCase.log_no)
     }
@@ -21,7 +21,7 @@ const main = async () => {
             data
         )}'`
     ).toString()
-    console.dir({ stdout }, { depth: null })
+    console.log({ stdout })
 }
 
 main()

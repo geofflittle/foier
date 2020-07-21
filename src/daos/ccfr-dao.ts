@@ -100,7 +100,7 @@ export interface TableDeleteCCFRProps {
     copaCaseId: string
 }
 
-export const tableDeleteCCFR = async ({ tableName, copaCaseId }: TableDeleteCCFRProps) => {
+export const tableDeleteCCFR = async ({ tableName, copaCaseId }: TableDeleteCCFRProps): Promise<void> => {
     const req = {
         tableName,
         partitionKeyName: "copaCaseId",
@@ -112,14 +112,21 @@ export const tableDeleteCCFR = async ({ tableName, copaCaseId }: TableDeleteCCFR
 export interface TableQueryAllCCFRsByStatusProps {
     tableName: string
     foiaRequestStatus: FoiaRequestStatus
+    limit: number
 }
 
-export const tableQueryAllCCFRsByStatus = async ({ tableName, foiaRequestStatus }: TableQueryAllCCFRsByStatusProps) => {
+export const tableQueryCCFRsByStatus = async ({
+    tableName,
+    foiaRequestStatus,
+    limit
+}: TableQueryAllCCFRsByStatusProps): Promise<CopaCaseFoiaRequest[]> => {
     const res = await tableQueryAllItems({
         tableName,
         indexName: "foiaRequestStatusIndex",
         partitionKeyName: "foiaRequestStatus",
-        partitionKeyValue: foiaRequestStatus
+        partitionKeyValue: foiaRequestStatus,
+        scanIndexForward: false,
+        limit
     })
     return res.map(itemToCCFR)
 }

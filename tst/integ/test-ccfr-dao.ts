@@ -1,7 +1,5 @@
 import { tableCreateCCFR, tableDeleteCCFR, tableGetCCFR, tableUpdateCCFR } from "../../src/daos/ccfr-dao"
 
-import { tableDeleteItem } from "../../src/aws-facades/ddb-facade"
-
 const main = async () => {
     const tableName = "Foier-CopaCaseFoiaRequests4CAAAC0E-15XE160DES96T"
     const copaCaseId = "copa-case-id"
@@ -14,7 +12,7 @@ const main = async () => {
         }
     })
     const ccfr = await tableGetCCFR({ tableName, copaCaseId })
-    console.dir({ ccfr }, { depth: null })
+    console.og({ ccfr })
     if (!ccfr) {
         throw new Error("No ccfr")
     }
@@ -22,7 +20,7 @@ const main = async () => {
     ccfr.foiaRequestStatus = "FULFILLED"
     await tableUpdateCCFR({ tableName, ccfr })
     const updatedCCFR = await tableGetCCFR({ tableName, copaCaseId })
-    console.dir({ updatedCCFR }, { depth: null })
+    console.log({ updatedCCFR })
     await tableDeleteCCFR({ tableName, copaCaseId })
 }
 
