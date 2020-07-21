@@ -44,5 +44,8 @@
     },
     "dependencies": {
         "got": "^11.5.0"
+    },
+    "resolutions": {
+        "lodash": "^4.1.19"
     }
 }

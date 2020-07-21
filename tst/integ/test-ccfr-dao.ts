@@ -12,7 +12,7 @@ const main = async () => {
         }
     })
     const ccfr = await tableGetCCFR({ tableName, copaCaseId })
-    console.og({ ccfr })
+    console.log({ ccfr })
     if (!ccfr) {
         throw new Error("No ccfr")
     }
