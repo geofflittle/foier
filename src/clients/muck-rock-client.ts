@@ -1,4 +1,7 @@
-import got from "got"
+import got, { OptionsOfJSONResponseBody } from "got"
+
+import { Options } from "aws-sdk/clients/datasync"
+import { Strings } from "aws-sdk/clients/opsworks"
 
 export interface CommFile {
     id: number
@@ -58,11 +61,19 @@ export interface GetFoiaRequestProps {
 
 export const getFoiaRequest = async ({ id }: GetFoiaRequestProps): Promise<FoiaRequest | undefined> => {
     try {
-        const res = await got.get(`https://muckrock.com/api_v1/foia/${id}`, {
-            responseType: "json"
-        })
-        return res.body as FoiaRequest
+        const reqUrl = `https://www.muckrock.com/api_v1/foia/${id}`
+        const reqOpts: OptionsOfJSONResponseBody = { responseType: "json" }
+        console.log({ module: "muck-rock-client", method: "getFoiaRequest", reqUrl, reqOpts })
+        const res = await got.get<FoiaRequest>(reqUrl, reqOpts)
+        console.log({ module: "muck-rock-client", method: "getFoiaRequest", res })
+        return res.body
     } catch (err) {
+        console.error({
+            module: "muck-rock-client",
+            method: "getFoiaRequest",
+            errName: err.name,
+            errMessage: err.message
+        })
         if (err.message != "Response code 404 (Not Found)") {
             throw err
         }
@@ -77,23 +88,29 @@ export interface CreateFoiaRequestProps {
     documentRequest: string
 }
 
+export interface CreateFoiaRequestResponse {
+    Location: string
+    Requests: number[]
+    status: string
+}
+
 export const createFoiaRequest = async ({
     apiToken,
     title,
     agency,
     documentRequest
-}: CreateFoiaRequestProps): Promise<unknown> => {
-    try {
-        const res = await got.post(`https://muckrock.com/api_v1/foia`, {
-            headers: { Authorization: `Token ${apiToken}`, "content-type": "application/json" },
-            body: JSON.stringify({ title, agency, document_request: documentRequest }),
-            responseType: "json"
-        })
-        return res.body
-    } catch (err) {
-        if (err.message != "Response code 404 (Not Found)") {
-            throw err
-        }
+}: CreateFoiaRequestProps): Promise<number> => {
+    const reqUrl = `https://www.muckrock.com/api_v1/foia/`
+    const reqOpts: OptionsOfJSONResponseBody = {
+        headers: { Authorization: `Token ${apiToken}`, "content-type": "application/json" },
+        body: JSON.stringify({ title, agency, document_request: documentRequest }),
+        responseType: "json"
     }
-    return undefined
+    console.log({ module: "muck-rock-client", method: "createFoiaRequest", reqUrl, reqOpts })
+    const res = await got.post<CreateFoiaRequestResponse>(reqUrl, reqOpts)
+    console.log({ module: "muck-rock-client", method: "createFoiaRequest", res })
+    if (!res.body.Requests || res.body.Requests.length != 1) {
+        throw new Error("No request received")
+    }
+    return res.body.Requests[0]
 }

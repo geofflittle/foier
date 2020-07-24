@@ -3,7 +3,7 @@ import { queryCopaCases } from "./src/clients/copa-client"
 
 const main = async () => {
     const copaCases = await queryCopaCases({
-        limit: 2,
+        limit: 10,
         orderBy: {
             column: "complaint_date",
             order: "DESC"

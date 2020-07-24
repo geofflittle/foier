@@ -1,15 +1,19 @@
 import path = require("path")
 
+import { Alarm, IMetric } from "@aws-cdk/aws-cloudwatch"
 import { Code, Function, Runtime } from "@aws-cdk/aws-lambda"
 import { Construct, Duration, Stack } from "@aws-cdk/core"
 import { Rule, Schedule } from "@aws-cdk/aws-events"
 
+import { ITopic } from "@aws-cdk/aws-sns"
 import { LambdaFunction } from "@aws-cdk/aws-events-targets"
+import { SnsAction } from "@aws-cdk/aws-cloudwatch-actions"
 
 export interface ScheduledFunctionProps {
     name: string
     schedule: Schedule
     environment: { [key: string]: string }
+    alarmTopic: ITopic
 }
 
 const pascalToKebabCase = (pascal: string): string => {
@@ -45,5 +49,14 @@ export class ScheduledFunction extends Construct {
             timeout: Duration.minutes(15)
         })
         this.rule.addTarget(new LambdaFunction(this.fnc))
+
+        const alarmName = `${props.name}Alarm`
+        const alarm = new Alarm(this, alarmName, {
+            alarmName,
+            metric: this.fnc.metricErrors(),
+            evaluationPeriods: 1,
+            threshold: 1
+        })
+        alarm.addAlarmAction(new SnsAction(props.alarmTopic))
     }
 }

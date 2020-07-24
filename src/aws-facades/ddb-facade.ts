@@ -12,6 +12,7 @@ export interface TablePutItemProps {
 }
 
 export const tablePutItem = async ({ tableName, item, conditionExpression }: TablePutItemProps): Promise<void> => {
+    console.log({ item })
     const req = {
         TableName: tableName,
         Item: item,
@@ -28,6 +29,7 @@ export interface BatchWriteItemsProps {
 }
 
 export const tableBatchPutItems = async ({ tableName, items }: BatchWriteItemsProps): Promise<AttributeMap[]> => {
+    console.log({ items })
     const req = { RequestItems: { [tableName]: items.map((item) => ({ PutRequest: { Item: item } })) } }
     console.log({ module: "ddb-facade", method: "tableBatchPutItems", req })
     const res = await dynamoDb.batchWriteItem(req).promise()
