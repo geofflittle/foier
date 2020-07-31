@@ -52,7 +52,7 @@ export class FoierStack extends Stack {
 
         const frsScdFnc = new ScheduledFunction(this, {
             name: "FoiaRequestSubmitter",
-            schedule: Schedule.rate(Duration.minutes(1)),
+            schedule: Schedule.rate(Duration.hours(1)),
             environment: {
                 CCFR_TABLE_NAME: ccfrTable.tableName,
                 MAX_REQUESTS_SUBMITTED: maxRequestsSubmitted,
@@ -65,7 +65,7 @@ export class FoierStack extends Stack {
 
         const rsuScdFnc = new ScheduledFunction(this, {
             name: "RequestStatusUpdater",
-            schedule: Schedule.rate(Duration.minutes(1)),
+            schedule: Schedule.rate(Duration.hours(1)),
             environment: {
                 CCFR_TABLE_NAME: ccfrTable.tableName,
                 MAX_REQUESTS_SUBMITTED: maxRequestsSubmitted
