@@ -49,10 +49,11 @@ export const handler: ScheduledHandler = async () => {
                     title: `COPA Case ${ccfr.copaCaseId}`,
                     agency: AGENCY_ID_COPA,
                     documentRequest:
-                        `Copies of the attachment sheets, the summary digest report, and any other final disposition` +
-                        ` documentation (e.g., an Administrative Closure order, mediation agreement, grievance ` +
-                        `decision, or arbitration award) for COPA case __${ccfr.copaCaseId}__ as identified by the ` +
-                        `data provided at ` +
+                        `    1. Copies of the attachment sheets, the summary digest report, and any other final ` +
+                        `disposition documentation (e.g., an Administrative Closure order, mediation agreement, ` +
+                        `grievance decision, or arbitration award) and the contents of any related \n    2. Arrest ` +
+                        `report, case report, emails to and from the complainant, and internal review docs\n for COPA ` +
+                        `case ${ccfr.copaCaseId} as identified by the data provided at ` +
                         `https://data.cityofchicago.org/Public-Safety/COPA-Cases-Summary/mft5-nfa8/data.`
                 })
                 ccfr.foiaRequestId = foiaRequestId.toString()
