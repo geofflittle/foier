@@ -46,7 +46,7 @@
         "typescript": "^3.9.6"
     },
     "dependencies": {
-        "got": "^11.5.0"
+        "got": "^11.8.5"
     },
     "resolutions": {
         "lodash": "^4.1.19"
